@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-class MainActivity : AppCompatActivity() , View.OnClickListener {
+class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     lateinit var btnAdd : Button
     lateinit var btnSubtraction : Button
@@ -22,6 +22,9 @@ class MainActivity : AppCompatActivity() , View.OnClickListener {
     lateinit var etA : EditText
     lateinit var etB : EditText
     lateinit var resultTv : TextView
+
+    // Guarda a operação selecionada: "+", "-", "*", "/", "%"
+    private var selectedOp: Char? = null
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +42,13 @@ class MainActivity : AppCompatActivity() , View.OnClickListener {
         etB = findViewById(R.id.et_b)
         resultTv = findViewById(R.id.result_tv)
 
+        // IMPORTANT: registrar os listeners
+        btnAdd.setOnClickListener(this)
+        btnSubtraction.setOnClickListener(this)
+        btnMultiplication.setOnClickListener(this)
+        btnDivision.setOnClickListener(this)
+        btnPorcent.setOnClickListener(this)
+        btnResult.setOnClickListener(this)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -48,33 +58,68 @@ class MainActivity : AppCompatActivity() , View.OnClickListener {
     }
 
     override fun onClick(v: View?) {
-        var a = etA.text.toString().toDouble()
-        var b = etB.text.toString().toDouble()
-        var result = 0.0
+        when (v?.id) {
+            R.id.btn_add -> {
+                selectedOp = '+'
+                resultTv.text = "Operação: +"
+            }
+            R.id.btn_subtraction -> {
+                selectedOp = '-'
+                resultTv.text = "Operação: -"
+            }
+            R.id.btn_multiplication -> {
+                selectedOp = '*'
+                resultTv.text = "Operação: ×"
+            }
+            R.id.btn_division -> {
+                selectedOp = '/'
+                resultTv.text = "Operação: ÷"
+            }
+            R.id.btn_porc -> {
+                selectedOp = '%'
+                resultTv.text = "Operação: % (a * b / 100)"
+            }
+            R.id.btn_result -> {
+                // Ao clicar em "=", lemos os valores e aplicamos a operação selecionada
+                val a = etA.text.toString().toDoubleOrNull()
+                val b = etB.text.toString().toDoubleOrNull()
 
-        when(v?.id){
-            R.id.btn_add ->{
-                result = a+b
-            }
-            R.id.btn_subtraction ->{
-                result = a-b
-            }
-            R.id.btn_multiplication ->{
-                result = a*b
-            }
-            R.id.btn_division ->{
-                result = a/b
-            }
-            R.id.btn_porc ->{
-                result = (a*b)/100
-            }
-            R.id.btn_result ->{
-                resultTv.text = "Result is $result"
-            }
+                if (a == null || b == null) {
+                    resultTv.text = "Digite números válidos."
+                    return
+                }
 
+                val op = selectedOp
+                if (op == null) {
+                    resultTv.text = "Selecione uma operação antes de '='."
+                    return
+                }
+
+                val result = when (op) {
+                    '+' -> a + b
+                    '-' -> a - b
+                    '*' -> a * b
+                    '/' -> {
+                        if (b == 0.0) {
+                            resultTv.text = "Erro: divisão por zero."
+                            return
+                        } else a / b
+                    }
+                    '%' -> (a * b) / 100.0
+                    else -> {
+                        resultTv.text = "Operação desconhecida."
+                        return
+                    }
+                }
+
+                // Mostra o resultado com formatação simples (remove .0 se inteiro)
+                val text = if (result % 1.0 == 0.0) {
+                    result.toLong().toString()
+                } else {
+                    result.toString()
+                }
+                resultTv.text = "Resultado: $text"
+            }
         }
-
-
-
     }
 }
